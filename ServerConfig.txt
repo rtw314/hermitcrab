@@ -1,0 +1,68 @@
+Configuration
+Backup current Bind9 settings.
+cp /etc/bind/named.conf.options /etc/bind/named.conf.options.bak
+Edit /etc/bind/named.conf.options and replace the content to following:
+options {
+directory "/var/cache/bind";
+auth-nxdomain no;
+listen-on-v6 { any; };
+statistics-file "/var/cache/bind/named.stats";
+rrset-order {order cyclic;};
+allow-transfer { 127.0.0.1; };
+};
+logging {
+channel b_query {
+file "/var/log/bind9/query.log" versions 2 size 1m;
+print-time yes;
+severity info;
+};
+category queries { b_query; };
+};
+Create the log directory for Bind9.
+mkdir /var/log/bind9
+chown bind:bind /var/log/bind9
+Edit /etc/bind/named.conf to configure your domain zone file location. Append the following lines:
+zone "your-domain-name.com" {
+type master;
+file "/etc/bind/zones/your-domain-name.com.db";
+};
+Create your domain zone file at /etc/bind/zones/your-domain-name.com.db. Insert your DNS records by following this template:
+$TTL 86400
+@ IN SOA ns1.your-domain-name.com. root.your-domain-name.com. (
+2014100801 ; Serial
+43200 ; Refresh
+3600 ; Retry
+1209600 ; Expire
+180 ) ; Minimum TTL
+; Nameservers
+IN NS ns1.dymondsoft.com.
+IN NS ns2.dymondsoft.com.
+IN NS ns3.dymondsoft.com.
+; Root site
+IN A your.ip
+; Hostname records
+* IN A your.ip
+;sub1 IN A 123.456.78.91
+;sub2 IN A 123.456.78.92
+; Aliases
+www IN CNAME dymondsoft.com.
+webmail IN CNAME ghs.google.com.
+; MX records
+@ IN MX 1 aspmx.l.google.com.
+@ IN MX 3 alt1.aspmx.l.google.com.
+@ IN MX 3 alt2.aspmx.l.google.com.
+@ IN MX 5 aspmx2.googlemail.com.
+@ IN MX 5 aspmx3.googlemail.com.
+@ IN MX 5 aspmx4.googlemail.com.
+@ IN MX 5 aspmx5.googlemail.com.
+; SPF records
+@ IN TXT "v=spf1 ip4:199.195.140.194 include:_spf.google.com ~all"
+Restart Bind9:
+/etc/init.d/bind9 restart
+
+
+zone "us.example.com" IN {
+  type slave;
+  file "slave/slave.us.example.com";
+  masters {10.10.0.24;};
+};
