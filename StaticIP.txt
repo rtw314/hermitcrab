@@ -1,0 +1,71 @@
+How to set a static IP in Ubuntu 14.04 server
+
+By default the Ubuntu 14.04 server sets the interface to use DHCP, here’s how to set a static IP address.
+
+Edit “/etc/network/interfaces”.  In this example set-up we’ll use 192.168.1.50 as our server IP address:
+
+$sudo nano /etc/network/interfaces
+
+Find and comment the (default) DHCP entry.  Your “interfaces” file should look like this:
+
+——————————-
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto eth0
+
+# DHCP not needed
+# iface eth0 inet dhcp
+iface eth0 inet static
+address 192.168.1.50
+netmask 255.255.255.0
+network 192.168.1.0
+broadcast 192.168.1.255
+gateway 192.168.1.1
+dns-nameservers 8.8.8.8
+
+——————————-
+
+Save and exit.
+
+$sudo nano /etc/resolv.conf
+Add:
+nameserver 192.168.1.1
+nameserver 8.8.8.8
+search mynetwork.local
+
+Save and exit.
+
+Edit /etc/hosts
+
+$sudo nano /etc/hosts
+Add:
+192.168.1.50     u1404server.mynetwork.local      u1404server
+
+Save and exit:
+
+Reload (start and stop) network
+$sudo ifdown eth0 && sudo ifup eth0
+
+Note: There is a bug (feature?) in 14.04 where “service networking start|stop|restart” does nothing. This command/script worked in 13.10/13.04/12.04, however it doesn’t work in 14.04.
+
+To revert back to the 13.10 networking scripts go to:
+
+https://github.com/metral/restore_networking
+
+This will replace the 14.04 scripts with the one used in 13.10.
+
+$sudo apt-get install git
+$sudo git clone https://github.com/metral/restore_networking.git
+$cd restore_networking/
+$sudo ./restore_networking.sh
+
+miguel@u1404server:~$ sudo service networking restart
+networking stop/waiting
+networking start/running
